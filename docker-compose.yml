@@ -1,0 +1,37 @@
+version: '3'
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile-backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql
+    environment:
+      MYSQL_PASSWORD: test
+      MYSQL_USER: user
+      MYSQL_BDD: penduMicroservice
+      MYSQL_PORT: 3306
+      MYSQL_HOST: mysql
+      SERVER_URL: http://localhost:8080/api/v1
+      BACKEND_PORT: 8080
+    networks:
+      - mynetwork
+
+  mysql:
+    build:
+      context: .
+      dockerfile: docker/dockerFile-bdd
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: test
+      MYSQL_USER: user
+      MYSQL_PASSWORD: test
+      MYSQL_DATABASE: penduMicroservice
+    networks:
+      - mynetwork
+
+networks:
+  mynetwork:

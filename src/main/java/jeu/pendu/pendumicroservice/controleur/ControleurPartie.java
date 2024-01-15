@@ -24,8 +24,8 @@ public class ControleurPartie {
 
     @SneakyThrows
     @PostMapping("/partiePendu")
-    public ResponseEntity<PartieDto> creerPartie(@RequestParam String nomPartie, @RequestParam String nomJoueur){
-        PartieDto partieCree = facadePartie.creerPartie(nomPartie, nomJoueur);
+    public ResponseEntity<PartieDto> creerPartie(@RequestParam String nom_Partie, @RequestParam String nom_Joueur){
+        PartieDto partieCree = facadePartie.creerPartie(nom_Partie, nom_Joueur);
 
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
@@ -60,34 +60,34 @@ public class ControleurPartie {
     }
 
     @SneakyThrows
-    @PostMapping("/rejoindre")
-    public ResponseEntity<PartieDto> rejoindrePartie(@RequestParam String nomPartie, @RequestParam String motDePasse, @RequestParam String nomJoueur) {
-        PartieDto partieRejointe = facadePartie.rejoindrePartie(nomPartie, motDePasse, nomJoueur);
+    @PostMapping("partiePendu/rejoindre")
+    public ResponseEntity<PartieDto> rejoindrePartie(@RequestParam String nom_partie, @RequestParam String mot_de_passe, @RequestParam String nom_Joueur) {
+        PartieDto partieRejointe = facadePartie.rejoindrePartie(nom_partie, mot_de_passe, nom_Joueur);
         return ResponseEntity.ok(partieRejointe);
     }
 
     @SneakyThrows
-    @PostMapping("/lancer/{partieId}")
+    @PostMapping("partiePendu/lancer/{partieId}")
     public ResponseEntity<PartieDto> lancerPartie(@PathVariable Long partieId) {
         PartieDto partieLancee = facadePartie.lancePartie(partieId);
         return ResponseEntity.ok(partieLancee);
     }
 
     @SneakyThrows
-    @PostMapping("/jouerTour")
+    @PostMapping("partiePendu/jouerTour")
     public ResponseEntity<PartieDto> jouerTour(@RequestParam Long partieId, @RequestParam Long joueurId, @RequestParam String proposition) {
         PartieDto partieMiseAJour = facadePartie.jouerTour(partieId, joueurId, proposition);
         return ResponseEntity.ok(partieMiseAJour);
     }
 
     @SneakyThrows
-    @GetMapping("/vainqueur/{partieId}")
+    @GetMapping("partiePendu/vainqueur/{partieId}")
     public ResponseEntity<JoueurDto> getVainqueur(@PathVariable Long partieId) {
         return ResponseEntity.ok(facadePartie.getVainqueur(partieId));
     }
 
     @SneakyThrows
-    @DeleteMapping("/supprimer/{id}")
+    @DeleteMapping("partiePendu/supprimer/{id}")
     public ResponseEntity<Void> deletePartie(@PathVariable Long id) {
         facadePartie.deletePartie(id);
         return ResponseEntity.noContent().build();

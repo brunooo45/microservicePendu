@@ -10,6 +10,7 @@
 	</parent>
 	<groupId>jeu.pendu</groupId>
 	<artifactId>penduMicroservice</artifactId>
+	<packaging>war</packaging>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>penduMicroservice</name>
 	<description>penduMicroservice</description>

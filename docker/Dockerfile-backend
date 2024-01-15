@@ -1,0 +1,25 @@
+# First stage: complete build environment
+FROM maven:3.8.4-openjdk-17 AS builder
+
+# Set the working directory in the builder stage
+WORKDIR /build
+
+# Add pom.xml and source code
+ADD ./pom.xml ./pom.xml
+ADD ./src ./src
+
+# Package jar
+RUN mvn clean package
+RUN mvn clean package && ls /build/target/
+
+
+# Second stage: minimal runtime environment
+FROM openjdk:17-slim
+
+# Copy jar from the first stage
+COPY --from=builder /build/target/penduMicroservice-0.0.1-SNAPSHOT.war /penduMicroservice.war
+
+EXPOSE 8080
+
+# Set the command to execute the WAR file
+CMD ["java", "-jar", "/penduMicroservice.war"]

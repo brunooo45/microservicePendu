@@ -14,10 +14,6 @@ public class Joueur {
     @Column(name = "nom_Joueur")
     private String nomJoueur;
 
-    @ManyToOne
-    @JoinColumn(name = "partie_id")
-    private Partie partie; // La partie à laquelle ce joueur appartient
-
     @Getter
     @Column(name = "tour_Joueur")
     private boolean tourJoueur;
@@ -25,6 +21,10 @@ public class Joueur {
     @Getter
     @Column(name = "erreurs")
     private int erreurs = 0;
+
+    @ManyToOne
+    @JoinColumn(name = "partie_id")
+    private Partie partie;
 
 
 
@@ -47,14 +47,6 @@ public class Joueur {
 
     public void setNomJoueur(String nomJoueur) {
         this.nomJoueur = nomJoueur;
-    }
-
-    public Partie getPartie() {
-        return partie;
-    }
-
-    public void setPartie(Partie partie) {
-        this.partie = partie;
     }
 
     public void setTourJoueur(boolean tourJoueur) {

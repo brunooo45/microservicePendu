@@ -1,0 +1,6 @@
+# Utilisez l'image MySQL officielle
+#FROM arm64v8/mysql
+FROM mysql:8.2.0
+
+# Copiez les fichiers SQL d'initialisation dans le conteneur
+COPY ./docker/script/script-creation-bdd.sql /docker-entrypoint-initdb.d/
