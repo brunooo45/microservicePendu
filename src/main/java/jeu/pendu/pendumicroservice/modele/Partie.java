@@ -40,7 +40,8 @@ public class Partie {
     @Column(name = "erreurs")
     private int erreurs;
 
-    @OneToMany(mappedBy = "partie", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "partie", cascade = CascadeType.ALL, orphanRemoval = true)
+    //@Column(name = "joueurs")
     private List<Joueur> joueurs = new ArrayList<>();
 
     @Getter

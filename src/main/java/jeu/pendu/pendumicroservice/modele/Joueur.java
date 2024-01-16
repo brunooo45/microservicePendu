@@ -22,6 +22,7 @@ public class Joueur {
     @Column(name = "erreurs")
     private int erreurs = 0;
 
+    @Getter
     @ManyToOne
     @JoinColumn(name = "partie_id")
     private Partie partie;
@@ -35,6 +36,10 @@ public class Joueur {
     public Joueur(String nomJoueur) {
         this.nomJoueur = nomJoueur;
         this.tourJoueur = false;
+    }
+
+    public void setPartie(Partie partie) {
+        this.partie = partie;
     }
 
     public void setErreurs(int erreurs) {

@@ -1,6 +1,11 @@
 version: '3'
 services:
+  discovery:
+    image: consul:1.14
+    ports:
+      - "8500:8500"
   backend:
+    restart: always
     build:
       context: .
       dockerfile: docker/Dockerfile-backend

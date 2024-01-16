@@ -42,12 +42,6 @@ public class ControleurPartie {
     }
 
     @SneakyThrows
-    @GetMapping("/partiePendu/{joueurId}")
-    public ResponseEntity<PartieDto> getPartieEnCours(@PathVariable Long joueurId) {
-        return ResponseEntity.ok(facadePartie.getPartieEnCours(joueurId));
-    }
-
-    @SneakyThrows
     @GetMapping("/partiePendu/enAttente")
     public ResponseEntity<List<PartieDto>> getPartiesEnAttente() {
         return ResponseEntity.ok(facadePartie.getPartiesEnAttente());

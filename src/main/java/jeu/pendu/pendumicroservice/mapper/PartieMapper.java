@@ -3,11 +3,18 @@ package jeu.pendu.pendumicroservice.mapper;
 import jeu.pendu.pendumicroservice.dtos.PartieDto;
 import jeu.pendu.pendumicroservice.modele.Joueur;
 import jeu.pendu.pendumicroservice.modele.Partie;
+import jeu.pendu.pendumicroservice.services.JoueurService;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class PartieMapper {
+
+    private final JoueurService joueurService;
+
+    public PartieMapper(JoueurService joueurService) {
+        this.joueurService = joueurService;
+    }
 
     public static PartieDto toDto(Partie partie) {
         if (partie == null) {
@@ -27,7 +34,7 @@ public class PartieMapper {
         return dto;
     }
 
-    public static Partie toEntity(PartieDto dto, List<Joueur> joueurs) {
+    public static Partie toEntity(PartieDto dto, JoueurService joueurService) {
         if (dto == null) {
             return null;
         }
@@ -39,7 +46,12 @@ public class PartieMapper {
         partie.setErreurs(dto.getErreurs());
         partie.setLettresDevinees(dto.getLettresDevinees());
         partie.setEtatPartie(dto.getEtatPartie());
-        partie.setJoueurs(joueurs);
+        //if (dto.getNomsJoueurs() != null) {
+        //    List<Joueur> joueurs = dto.getNomsJoueurs().stream()
+        //            .map(joueurService::getJoueurParNom)
+        //            .collect(Collectors.toList());
+        //    partie.setJoueurs(joueurs);
+        //}
         return partie;
     }
 }

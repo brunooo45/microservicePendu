@@ -6,8 +6,23 @@ public class JoueurDto {
     private String nomJoueur;
     private boolean tourJoueur;
     private int erreurs = 0;
+    private PartieDto partieDto;
 
     public JoueurDto() {
+    }
+
+    public JoueurDto(Long id, String nomJoueur, boolean tourJoueur, int erreurs, PartieDto partieDto) {
+        this.id = id;
+        this.nomJoueur = nomJoueur;
+        this.tourJoueur = tourJoueur;
+        this.erreurs = erreurs;
+        this.partieDto = partieDto;
+    }
+
+    public JoueurDto(Long id, String nomJoueur, boolean tourJoueur) {
+        this.id = id;
+        this.nomJoueur = nomJoueur;
+        this.tourJoueur = tourJoueur;
     }
 
     public JoueurDto(Long id, String nomJoueur, boolean tourJoueur, int erreurs) {
@@ -17,10 +32,12 @@ public class JoueurDto {
         this.erreurs = erreurs;
     }
 
-    public JoueurDto(Long id, String nomJoueur, boolean tourJoueur) {
-        this.id = id;
-        this.nomJoueur = nomJoueur;
-        this.tourJoueur = tourJoueur;
+    public PartieDto getPartieDto() {
+        return partieDto;
+    }
+
+    public void setPartieDto(PartieDto partieDto) {
+        this.partieDto = partieDto;
     }
 
     public int getErreurs() {

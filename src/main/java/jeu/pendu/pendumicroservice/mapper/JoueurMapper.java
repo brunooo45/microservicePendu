@@ -6,7 +6,7 @@ import jeu.pendu.pendumicroservice.modele.Joueur;
 public class JoueurMapper {
 
     public static JoueurDto toDto(Joueur joueur) {
-        return new JoueurDto(joueur.getId(), joueur.getNomJoueur(),joueur.isTourJoueur(), joueur.getErreurs());
+        return new JoueurDto(joueur.getId(), joueur.getNomJoueur(),joueur.isTourJoueur(), joueur.getErreurs(), PartieMapper.toDto(joueur.getPartie()));
     }
 
     public static Joueur toEntity(JoueurDto joueurDto) {
@@ -15,6 +15,7 @@ public class JoueurMapper {
         joueur.setNomJoueur(joueurDto.getNomJoueur());
         joueur.setTourJoueur(joueurDto.isTourJoueur());
         joueur.setErreurs(joueurDto.getErreurs());
+        //joueur.setPartie(PartieMapper.toEntity(joueurDto.getPartieDto()));
         return joueur;
     }
 }
