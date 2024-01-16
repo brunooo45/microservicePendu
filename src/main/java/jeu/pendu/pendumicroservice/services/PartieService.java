@@ -93,7 +93,8 @@ public class PartieService {
         if (joueur == null) {
             throw new JoueurInexistantException();
         }
-
+        joueur.setPartie(partie);
+        joueur = daoJoueur.creerJoueur(joueur);
         partie = ajouterJoueur(partie, joueur);
         Partie partieMiseAJour = daoPartie.mettreAJourPartie(partie);
         return PartieMapper.toDto(partieMiseAJour);
