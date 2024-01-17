@@ -40,4 +40,11 @@ CREATE TABLE IF NOT EXISTS `lettres_devinees` (
     FOREIGN KEY (`partie_id`) REFERENCES `partie` (`id`) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
+DROP TABLE IF EXISTS `lettres_ratees`;
+CREATE TABLE IF NOT EXISTS `lettres_ratees` (
+                                                `partie_id` bigint NOT NULL,
+                                                `lettre` char(1) COLLATE utf8_bin NOT NULL,
+                                                FOREIGN KEY (`partie_id`) REFERENCES `partie` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
 COMMIT;

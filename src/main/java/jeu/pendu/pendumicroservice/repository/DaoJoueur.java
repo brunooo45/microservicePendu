@@ -20,6 +20,11 @@ public class DaoJoueur {
         return joueurRepository.save(joueur);
     }
 
+    @Transactional
+    public Joueur mettreAJour(Joueur joueur) {
+        return joueurRepository.save(joueur);
+    }
+
     public List<Joueur> getTousLesJoueurs() {
         return joueurRepository.findAll();
     }

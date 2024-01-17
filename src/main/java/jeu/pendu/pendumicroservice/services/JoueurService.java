@@ -67,4 +67,8 @@ public class JoueurService {
         }
         return JoueurMapper.toDto(joueur);
     }
+
+    public Joueur mettreAJour(Joueur joueur) {
+        return daoJoueur.mettreAJour(joueur);
+    }
 }

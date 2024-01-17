@@ -37,6 +37,12 @@ public class Partie {
     private List<Character> lettresDevinees = new ArrayList<>();
 
     @Getter
+    @ElementCollection
+    @CollectionTable(name = "lettres_ratees", joinColumns = @JoinColumn(name = "partie_id"))
+    @Column(name = "lettre")
+    private List<Character> lettresRatees = new ArrayList<>();
+
+    @Getter
     @Column(name = "erreurs")
     private int erreurs;
 
@@ -66,6 +72,10 @@ public class Partie {
         this.erreurs = 0;
         this.etatPartie = "En attente";
         this.joueurActuelId = null;
+    }
+
+    public void setLettresRatees(List<Character> lettresRatees) {
+        this.lettresRatees = lettresRatees;
     }
 
     public void setJoueurActuelId(Long joueurActuelId) {

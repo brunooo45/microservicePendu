@@ -11,6 +11,7 @@ public class PartieDto {
     private String etatMot;
     private int erreurs;
     private List<Character> lettresDevinees;
+    private List<Character> lettresRatees;
     private List<String> nomsJoueurs;
     private String etatPartie;
     private String nomPartie;
@@ -27,6 +28,9 @@ public class PartieDto {
         this.nomsJoueurs = nomsJoueurs;
     }
 
+    public void setLettresRatees(List<Character> lettresRatees) {
+        this.lettresRatees = lettresRatees;
+    }
     public void setJoueurActuelId(Long joueurActuelId) {
         this.joueurActuelId = joueurActuelId;
     }

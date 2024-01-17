@@ -44,5 +44,13 @@ public class ControleurAdvise {
         return new ResponseEntity<>("Une erreur est survenue : " + ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+    @ExceptionHandler(JoueurDejaDansLaPartieException.class)
+    public ResponseEntity<String> handleJoueurDejaDansLaPartieException(JoueurDejaDansLaPartieException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.CONFLICT);
+    }
 
+    @ExceptionHandler(PartieDejaExistanteException.class)
+    public ResponseEntity<String> handlePartieDejaExistanteException(PartieDejaExistanteException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.CONFLICT);
+    }
 }

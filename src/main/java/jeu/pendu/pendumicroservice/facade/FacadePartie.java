@@ -54,12 +54,12 @@ public class FacadePartie implements IFacadePartie{
     }
 
     @Override
-    public PartieDto creerPartie(String nomPartie, String nomJoueur) throws JoueurInexistantException {
+    public PartieDto creerPartie(String nomPartie, String nomJoueur) throws JoueurInexistantException, PartieDejaExistanteException {
         return partieService.creerPartie(nomPartie, nomJoueur);
     }
 
     @Override
-    public PartieDto rejoindrePartie(String nomPartie, String motDePasse, String nomJoueur) throws JoueurInexistantException, PartieInexistanteException, MotDePasseIncorrectException {
+    public PartieDto rejoindrePartie(String nomPartie, String motDePasse, String nomJoueur) throws JoueurInexistantException, PartieInexistanteException, MotDePasseIncorrectException, JoueurDejaDansLaPartieException {
         return partieService.rejoindrePartie(nomPartie, motDePasse, nomJoueur);
     }
 
@@ -69,12 +69,12 @@ public class FacadePartie implements IFacadePartie{
     }
 
     @Override
-    public PartieDto jouerTour(Long partieId, Long joueurId, String proposition) throws JoueurInexistantException, PartieInexistanteException, PasTonTourException {
-        return partieService.tourJoueur(partieId, joueurId, proposition);
+    public PartieDto jouerTour(Long partieId, String proposition) throws JoueurInexistantException, PartieInexistanteException, PasTonTourException {
+        return partieService.tourJoueur(partieId, proposition);
     }
 
     @Override
-    public JoueurDto getVainqueur(Long partieId) throws PartieInexistanteException {
+    public JoueurDto getVainqueur(Long partieId) throws PartieInexistanteException, JoueurInexistantException {
         return partieService.obtenirVainqueur(partieId);
     }
 

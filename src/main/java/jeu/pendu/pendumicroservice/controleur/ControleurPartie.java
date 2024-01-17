@@ -69,8 +69,8 @@ public class ControleurPartie {
 
     @SneakyThrows
     @PostMapping("partiePendu/jouerTour")
-    public ResponseEntity<PartieDto> jouerTour(@RequestParam Long partieId, @RequestParam Long joueurId, @RequestParam String proposition) {
-        PartieDto partieMiseAJour = facadePartie.jouerTour(partieId, joueurId, proposition);
+    public ResponseEntity<PartieDto> jouerTour(@RequestParam Long partieId, @RequestParam String proposition) {
+        PartieDto partieMiseAJour = facadePartie.jouerTour(partieId, proposition);
         return ResponseEntity.ok(partieMiseAJour);
     }
 

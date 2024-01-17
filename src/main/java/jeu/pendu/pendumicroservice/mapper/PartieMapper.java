@@ -1,6 +1,8 @@
 package jeu.pendu.pendumicroservice.mapper;
 
+import jeu.pendu.pendumicroservice.dtos.JoueurDto;
 import jeu.pendu.pendumicroservice.dtos.PartieDto;
+import jeu.pendu.pendumicroservice.exception.JoueurInexistantException;
 import jeu.pendu.pendumicroservice.modele.Joueur;
 import jeu.pendu.pendumicroservice.modele.Partie;
 import jeu.pendu.pendumicroservice.services.JoueurService;
@@ -9,12 +11,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class PartieMapper {
-
-    private final JoueurService joueurService;
-
-    public PartieMapper(JoueurService joueurService) {
-        this.joueurService = joueurService;
-    }
 
     public static PartieDto toDto(Partie partie) {
         if (partie == null) {
@@ -28,6 +24,8 @@ public class PartieMapper {
         dto.setLettresDevinees(partie.getLettresDevinees());
         dto.setEtatPartie(partie.getEtatPartie());
         dto.setNomPartie(partie.getNomPartie());
+        dto.setJoueurActuelId(partie.getJoueurActuelId());
+        dto.setLettresRatees(partie.getLettresRatees());
         dto.setNomsJoueurs(partie.getJoueurs().stream()
                 .map(Joueur::getNomJoueur)
                 .collect(Collectors.toList()));
@@ -46,12 +44,19 @@ public class PartieMapper {
         partie.setErreurs(dto.getErreurs());
         partie.setLettresDevinees(dto.getLettresDevinees());
         partie.setEtatPartie(dto.getEtatPartie());
-        //if (dto.getNomsJoueurs() != null) {
-        //    List<Joueur> joueurs = dto.getNomsJoueurs().stream()
-        //            .map(joueurService::getJoueurParNom)
-        //            .collect(Collectors.toList());
-        //    partie.setJoueurs(joueurs);
-        //}
+        partie.setLettresRatees(dto.getLettresRatees());
+        partie.setJoueurActuelId(dto.getJoueurActuelId());
+        List<Joueur> joueurs = dto.getNomsJoueurs().stream()
+                .map(nomJoueur -> {
+                    try {
+                        JoueurDto joueurDto = joueurService.getJoueurParNom(nomJoueur);
+                        return JoueurMapper.toEntity(joueurDto,joueurService);
+                    } catch (JoueurInexistantException e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .collect(Collectors.toList());
+        partie.setJoueurs(joueurs);
         return partie;
     }
 }

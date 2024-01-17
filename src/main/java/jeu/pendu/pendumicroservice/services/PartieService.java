@@ -9,10 +9,11 @@ import jeu.pendu.pendumicroservice.mapper.JoueurMapper;
 import jeu.pendu.pendumicroservice.mapper.PartieMapper;
 import jeu.pendu.pendumicroservice.modele.Joueur;
 import jeu.pendu.pendumicroservice.modele.Partie;
-import jeu.pendu.pendumicroservice.repository.DaoJoueur;
 import jeu.pendu.pendumicroservice.repository.DaoPartie;
+import jeu.pendu.pendumicroservice.utils.StringUtils;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
@@ -24,12 +25,10 @@ public class PartieService {
     private final DaoPartie daoPartie;
     private final JoueurService joueurService;
     private final Random random = new Random();
-    private final DaoJoueur daoJoueur;
 
-    public PartieService(DaoPartie daoPartie, JoueurService joueurService, DaoJoueur daoJoueur) {
+    public PartieService(DaoPartie daoPartie, JoueurService joueurService) {
         this.daoPartie = daoPartie;
         this.joueurService = joueurService;
-        this.daoJoueur = daoJoueur;
     }
 
     public Partie ajouterJoueur(Partie partie, Joueur joueur) {
@@ -47,16 +46,19 @@ public class PartieService {
     }
 
     @Transactional
-    public PartieDto creerPartie(String nomPartie, String nomJoueur) throws JoueurInexistantException {
+    public PartieDto creerPartie(String nomPartie, String nomJoueur) throws JoueurInexistantException, PartieDejaExistanteException {
+        if (daoPartie.getPartieByNomPartie(nomPartie).isPresent()) {
+            throw new PartieDejaExistanteException();
+        }
         Random random = new Random();
-        String motSecret = MotsSecrets.MOTS.get(random.nextInt(MotsSecrets.MOTS.size()));
+        String motSecret = StringUtils.normaliser(MotsSecrets.MOTS.get(random.nextInt(MotsSecrets.MOTS.size())));
         String motDePasse = genererMotDePasse();
 
         Partie nouvellePartie = new Partie(motSecret, nomPartie, motDePasse);
-        Joueur joueur = JoueurMapper.toEntity(joueurService.getJoueurParNom(nomJoueur));
+        Joueur joueur = JoueurMapper.toEntity(joueurService.getJoueurParNom(nomJoueur), joueurService);
         nouvellePartie = daoPartie.creerPartie(nouvellePartie);
         joueur.setPartie(nouvellePartie);
-        joueur = daoJoueur.creerJoueur(joueur);
+        joueur = joueurService.mettreAJour(joueur);
         nouvellePartie = ajouterJoueur(nouvellePartie, joueur);
         Partie partieEnregistree = daoPartie.creerPartie(nouvellePartie);
 
@@ -82,19 +84,23 @@ public class PartieService {
     }
 
     @Transactional
-    public PartieDto rejoindrePartie(String nomPartie, String motDePasse, String nomJoueur) throws JoueurInexistantException, PartieInexistanteException, MotDePasseIncorrectException {
+    public PartieDto rejoindrePartie(String nomPartie, String motDePasse, String nomJoueur) throws JoueurInexistantException, PartieInexistanteException, MotDePasseIncorrectException, JoueurDejaDansLaPartieException {
         Partie partie = daoPartie.getPartieByNomPartie(nomPartie)
                 .orElseThrow(PartieInexistanteException::new);
         if (!partie.getMotDePasse().equals(motDePasse)) {
             throw new MotDePasseIncorrectException();
         }
 
-        Joueur joueur = JoueurMapper.toEntity(joueurService.getJoueurParNom(nomJoueur));
+        Joueur joueur = JoueurMapper.toEntity(joueurService.getJoueurParNom(nomJoueur), joueurService);
         if (joueur == null) {
             throw new JoueurInexistantException();
         }
+
+        if (partie.getJoueurs().contains(joueur)) {
+            throw new JoueurDejaDansLaPartieException();
+        }
         joueur.setPartie(partie);
-        joueur = daoJoueur.creerJoueur(joueur);
+        joueur = joueurService.mettreAJour(joueur);
         partie = ajouterJoueur(partie, joueur);
         Partie partieMiseAJour = daoPartie.mettreAJourPartie(partie);
         return PartieMapper.toDto(partieMiseAJour);
@@ -110,6 +116,9 @@ public class PartieService {
         }
         Random random = new Random();
         Joueur joueurActuel = partie.getJoueurs().get(random.nextInt(partie.getJoueurs().size()));
+        joueurActuel.setTourJoueur(true);
+        joueurActuel.setPartie(partie);
+        joueurActuel = joueurService.mettreAJour(joueurActuel);
         partie.setJoueurActuelId(joueurActuel.getId());
 
         partie.setEtatPartie("En cours");
@@ -121,20 +130,26 @@ public class PartieService {
 
 
     @Transactional
-    public PartieDto tourJoueur(Long partieId, Long joueurId, String proposition) throws JoueurInexistantException, PartieInexistanteException, PasTonTourException {
+    public PartieDto tourJoueur(Long partieId, String proposition) throws JoueurInexistantException, PartieInexistanteException, PasTonTourException {
         Partie partie = obtenirPartieValidee(partieId);
-        Joueur joueur = obtenirJoueurValide(joueurId, partie);
+        Joueur joueur = obtenirJoueurValide(partie.getJoueurActuelId(), partie);
+        //vérifier si la partie est en cours
+        if (!partie.getEtatPartie().equals("En cours")) {
+            throw new PartieInexistanteException();
+        }
         if (!joueur.isTourJoueur()) {
             throw new PasTonTourException();
         }
         traiterProposition(partie, joueur,proposition);
-        if (!estGagnee(partie.getId())) {
+        // Passer au joueur suivant si la partie n'est pas terminée
+        if (!estGagnee(partie.getId()) && !estPartieTerminee(partie)) {
             partie = passerAuJoueurSuivant(partie.getId());
         } else {
             partie = terminerPartie(partie.getId());
         }
 
         partie = daoPartie.mettreAJourPartie(partie);
+        joueur = joueurService.mettreAJour(joueur);
         return PartieMapper.toDto(partie);
 
 
@@ -152,21 +167,22 @@ public class PartieService {
                 .orElseThrow(JoueurInexistantException::new);
     }
 
-    public JoueurDto obtenirVainqueur(Long partieId) throws PartieInexistanteException {
+    public JoueurDto obtenirVainqueur(Long partieId) throws PartieInexistanteException, JoueurInexistantException {
         Partie partie = daoPartie.getPartieByIdOptional(partieId)
                 .orElseThrow(PartieInexistanteException::new);
         if (!estGagnee(partieId)) {
             return null;
         }
+        return joueurService.getJoueur(partie.getJoueurActuelId());
 
-        return partie.getJoueurs().stream()
-                .map(JoueurMapper::toDto)
-                .filter(JoueurDto::isTourJoueur)
-                .findFirst()
-                .orElse(null);
+        //return partie.getJoueurs().stream()
+                //.map(JoueurMapper::toDto)
+                //.filter(JoueurDto::isTourJoueur)
+                //.findFirst()
+                //.orElse(null);
     }
 
-    public Partie passerAuJoueurSuivant(Long partieId) throws PartieInexistanteException {
+    public Partie passerAuJoueurSuivant(Long partieId) throws PartieInexistanteException, JoueurInexistantException {
         Partie partie = obtenirPartieValidee(partieId);
         // Trouver l'index du joueur actuel
         int indexActuel = partie.getJoueurs().indexOf(partie.getJoueurs().stream()
@@ -176,10 +192,17 @@ public class PartieService {
         // Réinitialiser le tour du joueur actuel
         if (indexActuel != -1) {
             partie.getJoueurs().get(indexActuel).setTourJoueur(false);
+            joueurService.mettreAJour(partie.getJoueurs().get(indexActuel));
         }
         // Passer au joueur suivant
         int indexSuivant = (indexActuel + 1) % partie.getJoueurs().size();
+        while (aAtteintMaxErreurs(partie.getJoueurs().get(indexSuivant).getId(), partie)) {
+            indexSuivant = (indexSuivant + 1) % partie.getJoueurs().size();
+        }
         partie.getJoueurs().get(indexSuivant).setTourJoueur(true);
+        joueurService.mettreAJour(partie.getJoueurs().get(indexActuel));
+        partie.setJoueurActuelId(partie.getJoueurs().get(indexSuivant).getId());
+        partie = daoPartie.mettreAJourPartie(partie);
         return partie;
     }
 
@@ -192,32 +215,54 @@ public class PartieService {
         }
     }
 
-    private void traiterLettreProposee(Partie partie, Joueur joueur, char lettreProposee) throws JoueurInexistantException {
-        String motSecret = partie.getMotSecret();
+    private void traiterLettreProposee(Partie partie, Joueur joueur, char lettreProposee) throws JoueurInexistantException, PartieInexistanteException {
+        String motSecret = StringUtils.normaliser(partie.getMotSecret());
+        char lettreNormalisee = StringUtils.normaliser(String.valueOf(lettreProposee)).charAt(0);
         StringBuilder etatMot = new StringBuilder(partie.getEtatMot());
         boolean lettreTrouvee = false;
+        List<Character> lettresDevinees = partie.getLettresDevinees();
+        List<Character> lettresRater = partie.getLettresRatees();
 
         for (int i = 0; i < motSecret.length(); i++) {
-            if (motSecret.charAt(i) == lettreProposee && etatMot.charAt(i) == '_') {
-                etatMot.setCharAt(i, lettreProposee);
+            if (motSecret.charAt(i) == lettreNormalisee && etatMot.charAt(i) == '_') {
+                etatMot.setCharAt(i, lettreNormalisee);
                 lettreTrouvee = true;
+                lettresDevinees.add(lettreNormalisee);
+                partie.setLettresDevinees(lettresDevinees);
+                daoPartie.mettreAJourPartie(partie);
             }
         }
-
         if (!lettreTrouvee) {
-            ajouterErreurJoueur(joueur.getId(),partie);
-            if (aAtteintMaxErreurs(joueur.getId(), partie)) {
-                partie.getJoueurs().remove(joueur);
-                partie.setJoueurs(partie.getJoueurs());
+            if (!partie.getLettresRatees().contains(lettreNormalisee)) {
+                lettresRater.add(lettreNormalisee);
+                partie.setLettresRatees(lettresRater);
+                daoPartie.mettreAJourPartie(partie);
+            }
+            if (partie.getJoueurs().size() == 1) {
+                partie.setErreurs(partie.getErreurs() + 1);
+                daoPartie.mettreAJourPartie(partie);
+            } else {
+                ajouterErreurJoueur(joueur.getId(),partie);
+                joueurService.mettreAJour(joueur);
+                //if (aAtteintMaxErreurs(joueur.getId(), partie)) {
+                //partie.getJoueurs().remove(joueur);
+                //partie.setJoueurs(partie.getJoueurs());
+                //joueur.setPartie(null);
+                //joueurService.mettreAJour(joueur);
+                // }
             }
         }
-
+        if (estPartieTerminee(partie)) {
+            partie = terminerPartie(partie.getId());
+        }
         partie.setEtatMot(etatMot.toString());
+        daoPartie.mettreAJourPartie(partie);
     }
 
     public void ajouterErreurJoueur(Long joueurId,Partie partie ) throws JoueurInexistantException {
         Joueur joueur = obtenirJoueurValide(joueurId, partie);
         joueur.setErreurs(joueur.getErreurs() + 1);
+        joueurService.mettreAJour(joueur);
     }
 
     public boolean aAtteintMaxErreurs(Long joueurId, Partie partie) throws JoueurInexistantException {
@@ -227,15 +272,23 @@ public class PartieService {
     }
 
 
-    private void traiterMotPropose(Partie partie, String motPropose) throws PartieInexistanteException {
-        if (motPropose.equals(partie.getMotSecret())) {
-            partie.setEtatMot(motPropose);
+    private void traiterMotPropose(Partie partie, String motPropose) throws PartieInexistanteException, JoueurInexistantException {
+        String motProposeNormalise = StringUtils.normaliser(motPropose);
+        if (motProposeNormalise.equals(partie.getMotSecret())) {
+            partie.setEtatMot(motProposeNormalise);
             partie = terminerPartie(partie.getId());
         } else {
-            partie.setErreurs(partie.getErreurs() + 1);
-            if (estPartieTerminee(partie)) {
-                partie = terminerPartie(partie.getId());
+            if (partie.getJoueurs().size() == 1) {
+                partie.setErreurs(partie.getErreurs() + 1);
+            } else {
+                ajouterErreurJoueur(partie.getJoueurActuelId(), partie);
+                joueurService.mettreAJour(obtenirJoueurValide(partie.getJoueurActuelId(), partie));
+                daoPartie.mettreAJourPartie(partie);
             }
+        }
+        if (estPartieTerminee(partie)) {
+            partie = terminerPartie(partie.getId());
+            daoPartie.mettreAJourPartie(partie);
         }
     }
 
@@ -248,6 +301,13 @@ public class PartieService {
         if (estTerminee) {
             partie.setEtatPartie("Terminée");
             partie = daoPartie.mettreAJourPartie(partie);
+            //je veux parcourir la liste des joueurs et supprimer la partie de chaque joueur
+            for (Joueur joueur : partie.getJoueurs()) {
+                joueur.setPartie(null);
+                joueur.setTourJoueur(false);
+                joueur.setErreurs(0);
+                joueurService.mettreAJour(joueur);
+            }
         }
         return partie;
     }
@@ -255,8 +315,10 @@ public class PartieService {
     private boolean estPartieTerminee(Partie partie) {
         boolean motDevine = !partie.getEtatMot().contains("_");
         boolean maxErreursAtteint = partie.getErreurs() >= Partie.MAX_ERREURS;
+        boolean joueurPerdu = partie.getJoueurs().stream()
+                .allMatch(j -> j.getErreurs() >= MAX_ERREURS_PAR_JOUEUR);
 
-        return motDevine || maxErreursAtteint;
+        return motDevine || maxErreursAtteint || joueurPerdu;
     }
 
     public boolean estGagnee(Long partieId) throws PartieInexistanteException {
